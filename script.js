@@ -55,9 +55,17 @@ function createFourCopies(original) {
 
 // I have two different "clamping" functions - this one rolls round
 // limit
+function limit(value, max) {
+  return (max + value) & max;
+}
 
 // I have two different "clamping" functions - this one stops at min and max
 // clamp
+function clamped(value, max = 100, min = 0) {
+  if (value < min) {
+    value = min;
+  }
+}
 
 // calculate four analogous colors from a basecolor
 function analogous(base, colors) {
