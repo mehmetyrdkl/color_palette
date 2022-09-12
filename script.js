@@ -4,25 +4,37 @@ window.addEventListener("DOMContentLoaded", start);
 
 const settings = {
   selectedColor: null,
+  harmony: analogous,
 };
 
 function start() {
   console.log("Start program");
-
+  setBaseColor(getRandomColor());
   // start with a random color
 
   registerButtons();
 
   // make sure we select analogous
+  document.querySelector("#analog").checked = true;
 }
 
 function registerButtons() {
   // colorwheel / basecolor
-  document.querySelector("#basecolor").addEventListener("input", changeBaseColor);
+  document
+    .querySelector("#basecolor")
+    .addEventListener("input", changeBaseColor);
 
   // harmonies
+  document.querySelector("#harmonies").addEventListener("click", changeHarnony);
 }
 // change harmony
+function changeHarnony(event) {
+  //console.log("changeHarnony", event.target.value);
+  const harmony = event.target.value;
+  if (harmony) {
+    setHarmony(harmony);
+  }
+}
 
 function changeBaseColor(event) {
   const color = event.target.value;
@@ -30,6 +42,14 @@ function changeBaseColor(event) {
   setBaseColor(color);
 }
 // createFourCopies
+function createFourCopies(original) {
+  const copies = [];
+  for (let i = 0; i < 4; i++) {
+    copies.push(Object.assign({}, original));
+  }
+
+  return copies;
+}
 
 // clampColors
 
@@ -40,9 +60,20 @@ function changeBaseColor(event) {
 // clamp
 
 // calculate four analogous colors from a basecolor
-
+function analogous(base, colors) {
+  colors[0].h = base.h - 30;
+  colors[1].h = base.h - 60;
+  colors[2].h = base.h + 30;
+  colors[3].h = base.h + 60;
+}
 //  monochromatic
 
+function monochromatic(base, colors) {
+  colors[0].s = base.s - 20;
+  colors[1].l = base.h + 30;
+  colors[2].s = base.s - 10;
+  colors[3].l = base.l - 20;
+}
 //  triadic
 
 // complementary
@@ -52,6 +83,17 @@ function changeBaseColor(event) {
 // shades
 
 // setHarmony
+function setHarmony(harmony) {
+  console.log("setHarmony", harmony);
+  switch (harmony) {
+    case "analog":
+      settings.harmony = analogous;
+      break;
+    case "monochromatic":
+      settings.harmony = monochromatic;
+  }
+  calculateHarmony();
+}
 
 function setBaseColor(color) {
   document.querySelector("#basecolor").value = color;
@@ -60,11 +102,25 @@ function setBaseColor(color) {
 
   settings.selectedColor = color;
 
-  //calculateHarmony();
+  calculateHarmony();
 }
 
 // calculateHarmony
+function calculateHarmony() {
+  const indexes = [1, 2, 4, 5];
+  const base = convertRGBToHSL(convertHexToRGB(settings.selectedColor));
 
+  // console.log("settings.selectedColor", settings.selectedColor);
+  // console.log("calculateHarmony base", base);
+  const colors = createFourCopies(base);
+  settings.harmony(base, colors);
+  console.log("colors", colors);
+  colors.forEach((color, i) => {
+    const rgb = convertHSLtoRGB(color);
+    const hex = convertRGBtoHEX(rgb);
+    showColor(indexes[i], hex);
+  });
+}
 function showColor(index, color) {
   const colorinfo = document.querySelector("#color" + index);
 
@@ -86,16 +142,24 @@ function showHex(index, hex) {
 
 function showRGB(index, rgb) {
   const colorinfo = document.querySelector("#color" + index);
-  colorinfo.querySelector("[data-info=rgb]").textContent = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+  colorinfo.querySelector(
+    "[data-info=rgb]"
+  ).textContent = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
 }
 
 function showHSL(index, hsl) {
   const colorinfo = document.querySelector("#color" + index);
-  colorinfo.querySelector("[data-info=hsl]").textContent = `hsl(${Math.floor(hsl.h)}, ${Math.floor(hsl.s)}%, ${Math.floor(hsl.l)}%)`;
+  colorinfo.querySelector("[data-info=hsl]").textContent = `hsl(${Math.floor(
+    hsl.h
+  )}, ${Math.floor(hsl.s)}%, ${Math.floor(hsl.l)}%)`;
 }
 
 function getRandomColor() {
-  return convertRGBtoHEX({ r: Math.floor(Math.random() * 255), g: Math.floor(Math.random() * 255), b: Math.floor(Math.random() * 255) });
+  return convertRGBtoHEX({
+    r: Math.floor(Math.random() * 255),
+    g: Math.floor(Math.random() * 255),
+    b: Math.floor(Math.random() * 255),
+  });
 }
 
 function convertHexToRGB(color) {
